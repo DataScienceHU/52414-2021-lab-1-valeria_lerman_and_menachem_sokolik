@@ -28,7 +28,7 @@ Your final push should include this Rmd file (with your answers filled-in), toge
 <br/><br/>
 The only allowed libraries are the following (**please do not add your own**):
 ```{r, include=FALSE}
-library(tidyverse) # This includes dplyr, stringr, ggplot2, .. 
+library(tidyverse) # This includes dplyr, stringr, ggplot2, ....// 
 library(data.table)
 ```  
 <br/><br/>
