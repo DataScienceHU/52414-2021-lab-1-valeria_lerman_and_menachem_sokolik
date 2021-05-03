@@ -64,8 +64,11 @@ take this into account. Specifically, the calculations should ignore the missing
 
 1. [3 pts]  First, load the complete covid19 dataset in csv format from the world-of-data [world-of-data](https://github.com/owid/covid-19-data/tree/master/public/data) into a data-frame in R.     
 Change if needed the class of the `date` variable to `Date` and check that the class is correct.   
-
-
+```{r}
+df <- read.csv("owid-covid-data.csv")
+df$date <- as.Date(df$date,format="%Y-%m-%d")
+class(df$date)
+```
 2. [6 pt] List in a table the top 5 countries in terms of current `total_cases_per_million`. Show only the country, last-date, and the total number of cases per million. <br>
 Repeat the same with two additional separate tables for top 5 countries for `total_deaths_per_million` and `total_vaccinations_per_hundred`. 
 
@@ -92,9 +95,49 @@ b. Apply the function from a. to fill the `new_tests_smoothed` column for the co
 a. Create a new data-frame with one row per country, that for each countrie will store as columns the current `total_cases_per_million` and `total_deaths_per_million`, in addition to the country name (`location`). <br>
 Next, make a scatter plot showing these two columns. Compute a linear regression line of the number of deaths per million as a function of the number of cases per million and add the fitted regression line to the plot. What is the slope and what does it represent? 
 
+### The data frame
+```{r}
+newmat=data.frame(c(df$location),c(df$total_cases_per_million),c(df$total_deaths_per_million))
+newmat[is.na(newmat)] <- 0
+newmat$c.df.total_cases_per_million.=as.numeric(newmat$c.df.total_cases_per_million.)
+newmat$c.df.total_deaths_per_million.=as.numeric(newmat$c.df.total_deaths_per_million.)
+agg= aggregate(newmat[-1], by = list(newmat$c.df.location), FUN = sum)
+colnames(agg)=c("location","total_cases_per_million","total_deaths_per_million")
+head(agg)
+```
+
+### The scatter plot
+```{r}
+options(scipen = 100)
+plot(agg$total_cases_per_million, agg$total_deaths_per_million, main="Scatterplot of the number of deaths per million as a function of the number of cases per million",
+   xlab="total_cases_per_million ", ylab="total_deaths_per_million ", pch=19)
+abline(lm(agg$total_deaths_per_million~agg$total_cases_per_million), col="red")
+reg=lm(agg$total_deaths_per_million~agg$total_cases_per_million)
+summary(reg)
+```
+
 b. Find for each country the date at which the number of new `cases` was maximal, and the date at which the number of new `deaths` was maximal, 
 and add them to the data-frame from a. <br>
 Make a scatter plot with a linear regression line as in a. Is the slope close to one? why? What is the intercept and what does it represent ? 
+
+```{r}
+newmat2=data.frame(c(df$location),c(df$new_cases),c(df$new_deaths))
+newmat2[is.na(newmat2)] <- 0
+newmat2$c.df.new_cases.=as.numeric(newmat2$c.df.new_cases.)
+newmat2$c.df.new_deaths.=as.numeric(newmat2$c.df.new_deaths.)
+agg2= aggregate(newmat2[-1], by = list(newmat2$c.df.location), FUN = max)
+colnames(agg2)=c("location","max_new_cases","max_new_deaths")
+finaldataframe=cbind(agg,agg2[,2:3])
+
+
+
+options(scipen = 100)
+plot(finaldataframe$max_new_cases, finaldataframe$max_new_deaths, main="Scatterplot of the max number of new deaths as a function of the max number of new cases",
+   xlab="max_new_cases ", ylab="max_new_deaths ", pch=19)
+abline(lm(finaldataframe$max_new_deaths~finaldataframe$max_new_cases), col="red")
+reg2=lm(finaldataframe$max_new_deaths~finaldataframe$max_new_cases)
+summary(reg2)
+```
 
 6. [9 pt] We want to compute the world-wide number of `new_cases`, `new_deaths` and `new_vaccinations` by month. Aggregate the country-level data and store the results in a new dataframe called `monthly` with each row corresponding to a month, and columns correponding to the worldwide number of new cases, deaths or vaccinations in this month. <br>
 Show the three columns in three different barplots. <br>
