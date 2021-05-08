@@ -28,7 +28,7 @@ Your final push should include this Rmd file (with your answers filled-in), toge
 <br/><br/>
 The only allowed libraries are the following (**please do not add your own**):
 ```{r, include=FALSE}
-library(tidyverse) # This includes dplyr, stringr, ggplot2, ....// 
+library(tidyverse) # This includes dplyr, stringr, ggplot2, .. 
 library(data.table)
 ```  
 <br/><br/>
@@ -63,23 +63,80 @@ take this into account. Specifically, the calculations should ignore the missing
 ### Questions: 
 
 1. [3 pts]  First, load the complete covid19 dataset in csv format from the world-of-data [world-of-data](https://github.com/owid/covid-19-data/tree/master/public/data) into a data-frame in R.     
-Change if needed the class of the `date` variable to `Date` and check that the class is correct.   
+Change if needed the class of the `date` variable to `Date` and check that the class is correct. 
+
 ```{r}
 df <- read.csv("owid-covid-data.csv")
-df$date <- as.Date(df$date,format="%Y-%m-%d")
+df$date = as.Date(df$date) # change Date from factor to date type
 class(df$date)
-```
+```  
+
+
 2. [6 pt] List in a table the top 5 countries in terms of current `total_cases_per_million`. Show only the country, last-date, and the total number of cases per million. <br>
 Repeat the same with two additional separate tables for top 5 countries for `total_deaths_per_million` and `total_vaccinations_per_hundred`. 
 
+```{r}
+top_5 <- function(x){
+  cases.agg <- aggregate(df[,as.numeric(x)]~location ,df, FUN = max)
+  total.x.per.million.top <- head(cases.agg[order(cases.agg[2],decreasing = TRUE),],5) # Ordering by Value, desc
+  last_date <- data.frame(location=NA, date = NA, total=NA)
+  for (i in 1:nrow(total.x.per.million.top)){
+    total_top <- total.x.per.million.top[i,2]
+    ind <- which(total_top == df[,as.numeric(x)])
+    y <- head(df[ind,][order(df[ind,]$date,decreasing = TRUE),],1)
+    last_date <-rbind(last_date,data.frame(location = y$location,date = as.character.Date(y$date),total = y[,as.numeric(x)]))
+  }
+  last_date <- na.omit(last_date)
+  last_date$date = as.Date(last_date$date)
+  return(last_date)
+}
+```
+The top 5 of `total_cases_per_million`
+```{r}
+top.5 <- top_5(which( colnames(df)=="total_cases_per_million"))
+names(top.5)[names(top.5) == "total"] <- "total_cases_per_million"
+rownames(top.5)<-NULL
+top.5
+```
+The top 5 of `total_deaths_per_million`
+```{r}
+top.5 <- top_5(which( colnames(df)=="total_deaths_per_million"))
+names(top.5)[names(top.5) == "total"] <- "total_deaths_per_million"
+rownames(top.5)<-NULL
+top.5
+```
+Top 5 of `total_vaccinations_per_hundred`
+```{r}
+top.5 <- top_5(which( colnames(df)=="total_vaccinations_per_hundred"))
+names(top.5)[names(top.5) == "total"] <- "total_vaccinations_per_million"
+rownames(top.5)<-NULL
+top.5
+```
+
 3. [12 pts] 
-a. Write a function that recieves as input the data-frame, and a column name as string. The function plots 
-the value of the input column as a function of the date for each of the six continents (`Africa`, `Asia`, `Europe`, `North America`, `Oceania`, `South America`), shown on the same graph with different colors or symbols. Make sure that the difference between the continents is visualized clearly, use meaningful axis and plot labels, and add an informative legend.  NA or other no-number values should not be displayed.
+a. Write a function that recieves as input the data-frame, and a column name as string. The function plots the value of the input column as a function of the date for each of the six continents (`Africa`, `Asia`, `Europe`, `North America`, `Oceania`, `South America`), shown on the same graph with different colors or symbols. Make sure that the difference between the continents is visualized clearly, use meaningful axis and plot labels, and add an informative legend.  NA or other no-number values should not be displayed.
+
+```{r}
+myfun = function(dat_frame,name){
+  data_frame2<-dat_frame %>% drop_na(all_of(name)) %>% filter((continent=="") & location != "World" & location != "International" & location != "European Union")
+  ggplot(data_frame2,aes_string(y=name,col="location"))+ geom_line(aes(x=as.Date(date)))+ylab(gsub("_"," ",name))+xlab("date")+theme_bw()
+}
+```
 
 b. Use the function written in a. and plot of the number of `new_cases` for the continents. 
 Next, make a similar plot for the *log* of the *smoothed* number of new cases. 
 Which plot is easier to interpret? explain. <br>
 Similarly, make two additional separate plots for the *log* of the *smoothed* number of `new_deaths` and `new_vaccinations` as a function of date for the continents. Describe the plotted results.
+
+```{r}
+myfun(df,"new_cases")
+df$log_smoothed_new_cases=log(abs(df$new_cases_smoothed))
+myfun(df,"log_smoothed_new_cases")
+df$log_smoothed_new_deaths=log(abs(df$new_deaths_smoothed))
+df$log_smoothed_new_vaccinations=log(abs(df$new_vaccinations_smoothed))
+myfun(df,"log_smoothed_new_deaths")
+myfun(df,"log_smoothed_new_vaccinations")
+```
 
 4. [12 pts] We would like to make a similar plot to the ones in qu. 3 for the number of new tests for each continent.
 However, some of the variables like `new_tests` and `new_test_smoothed` are not given at the continent level, but only at the individual country level. We therefore need to *complete* them for each continent. 
@@ -95,64 +152,146 @@ b. Apply the function from a. to fill the `new_tests_smoothed` column for the co
 a. Create a new data-frame with one row per country, that for each countrie will store as columns the current `total_cases_per_million` and `total_deaths_per_million`, in addition to the country name (`location`). <br>
 Next, make a scatter plot showing these two columns. Compute a linear regression line of the number of deaths per million as a function of the number of cases per million and add the fitted regression line to the plot. What is the slope and what does it represent? 
 
-### The data frame
+###The data frame
 ```{r}
-newmat=data.frame(c(df$location),c(df$total_cases_per_million),c(df$total_deaths_per_million))
-newmat[is.na(newmat)] <- 0
-newmat$c.df.total_cases_per_million.=as.numeric(newmat$c.df.total_cases_per_million.)
-newmat$c.df.total_deaths_per_million.=as.numeric(newmat$c.df.total_deaths_per_million.)
-agg= aggregate(newmat[-1], by = list(newmat$c.df.location), FUN = sum)
-colnames(agg)=c("location","total_cases_per_million","total_deaths_per_million")
-head(agg)
-```
+dat1 <-  aggregate(total_deaths_per_million~location,df,FUN = max)
+dat2 <-  aggregate(total_cases_per_million~location,df,FUN = max)
+data <- full_join(dat1,dat2,by = "location")
 
-### The scatter plot
+```
+###The scatter plot
 ```{r}
+cleandat=na.omit(data)
 options(scipen = 100)
-plot(agg$total_cases_per_million, agg$total_deaths_per_million, main="Scatterplot of the number of deaths per million as a function of the number of cases per million",
+plot(cleandat$total_cases_per_million, cleandat$total_deaths_per_million, main="Scatterplot of the number of deaths per million as a function of the number of cases per million",
    xlab="total_cases_per_million ", ylab="total_deaths_per_million ", pch=19)
-abline(lm(agg$total_deaths_per_million~agg$total_cases_per_million), col="red")
-reg=lm(agg$total_deaths_per_million~agg$total_cases_per_million)
+abline(lm(cleandat$total_deaths_per_million~cleandat$total_cases_per_million), col="red")
+reg=lm(cleandat$total_deaths_per_million~cleandat$total_cases_per_million)
 summary(reg)
 ```
+
 
 b. Find for each country the date at which the number of new `cases` was maximal, and the date at which the number of new `deaths` was maximal, 
 and add them to the data-frame from a. <br>
 Make a scatter plot with a linear regression line as in a. Is the slope close to one? why? What is the intercept and what does it represent ? 
 
 ```{r}
-newmat2=data.frame(c(df$location),c(df$new_cases),c(df$new_deaths))
-newmat2[is.na(newmat2)] <- 0
-newmat2$c.df.new_cases.=as.numeric(newmat2$c.df.new_cases.)
-newmat2$c.df.new_deaths.=as.numeric(newmat2$c.df.new_deaths.)
-agg2= aggregate(newmat2[-1], by = list(newmat2$c.df.location), FUN = max)
-colnames(agg2)=c("location","max_new_cases","max_new_deaths")
-finaldataframe=cbind(agg,agg2[,2:3])
-
-
+col1 <-  aggregate(new_cases~location,df,FUN = max)
+col2 <-  aggregate(new_deaths~location,df,FUN = max)
+joindata <- full_join(col1,col2,by = "location")
+new=data.frame(df$location,df$new_cases,df$date)
+colnames(new)=c("location","new_cases","max_new_cases_date")
+joindata <- merge(joindata,new,by=c("location","new_cases"))
+new1=data.frame(df$location,df$new_deaths,df$date)
+new1=na.exclude(new1)
+colnames(new1)=c("location","new_deaths","max_new_deaths_date")
+joindata <- merge(joindata,new1,by=c("location","new_deaths"))
+joindata1=joindata[!duplicated(joindata[,c("location","new_deaths","new_cases","max_new_cases_date")]),]
+data=full_join(data,joindata,by = "location")
+data=na.omit(data)
+summary(lm(new_deaths~new_cases,data=data))
 
 options(scipen = 100)
-plot(finaldataframe$max_new_cases, finaldataframe$max_new_deaths, main="Scatterplot of the max number of new deaths as a function of the max number of new cases",
-   xlab="max_new_cases ", ylab="max_new_deaths ", pch=19)
-abline(lm(finaldataframe$max_new_deaths~finaldataframe$max_new_cases), col="red")
-reg2=lm(finaldataframe$max_new_deaths~finaldataframe$max_new_cases)
-summary(reg2)
+ggplot(data = data, mapping = aes(x = new_cases, y = new_deaths))+geom_point()+geom_smooth(method="lm")
 ```
+
 
 6. [9 pt] We want to compute the world-wide number of `new_cases`, `new_deaths` and `new_vaccinations` by month. Aggregate the country-level data and store the results in a new dataframe called `monthly` with each row corresponding to a month, and columns correponding to the worldwide number of new cases, deaths or vaccinations in this month. <br>
 Show the three columns in three different barplots. <br>
 *Guidance:* (i) Beware to not double-count cases/deaths/vaccinations. (ii) Treat each month seperately (e.g. March 2020 and March 2021 are different).
 
+###The monthly dataframe
+```{r}
+temp=data.frame(c(df$location),c(df$date),c(df$new_cases),c(df$new_deaths),c(df$new_vaccinations))
+temp[is.na(temp)] <- 0
+temp$c.df.new_cases.=as.numeric(temp$c.df.new_cases.)
+temp$c.df.new_deaths.=as.numeric(temp$c.df.new_deaths.)
+temp$c.df.new_vaccinations.=as.numeric(temp$c.df.new_vaccinations.)
+short.date = strftime(temp$c.df.date., "%Y-%m")
+aggr.stat1 = aggregate(temp$c.df.new_cases.~ short.date, FUN = sum)
+aggr.stat2 = aggregate(temp$c.df.new_deaths.~ short.date, FUN = sum)
+aggr.stat3 = aggregate(temp$c.df.new_vaccinations.~ short.date, FUN = sum)
+monthly=data.frame(c(aggr.stat1),c(aggr.stat2[,2]),c(aggr.stat3[,2]))
+colnames(monthly)=c("months","new_cases","new_deaths","new_vaccinations")
+```
+
+###The barplots
+
+```{r}
+# Fitting Labels
+par(las=2) # make label text perpendicular to axis
+par(mar=c(4,8,4,2)) # increase y-axis margin.
+
+barplot(monthly$new_cases,
+main = "new_cases",
+xlab = "months",
+ylab = "number of cases",
+names.arg = c(as.character(monthly$months)),
+col = "purple",cex.axis=0.55,cex.names = 0.6)
+
+barplot(monthly$new_deaths,
+main = "new_deaths",
+xlab = "months",
+ylab = "number of deaths",
+names.arg = c(as.character(monthly$months)),
+col = "purple",cex.axis=0.55,cex.names = 0.6)
+
+barplot(monthly$new_vaccinations,
+main = "new_vaccinations",
+xlab = "months",
+ylab = "number of vaccinations",
+names.arg = c(as.character(monthly$months)),
+col = "purple",cex.axis=0.53,cex.names = 0.55)
+```
+
 7. [9 pt] Add to the covid data-frame a new column called `death_rate`, defined for `location` and `date` as the number of `total_deaths` divided by the number of `total_cases`. This column represents the probability of a diagnosed Covid-19 case to die from the disease.    <br>
 Next, make a histogram of the current death rates over all countries with 50 bins. <br>
 List in a table the top 3 countries having the highest death rate. 
 
+###creating the death rate
+```{r}
+death_rate=c(df$total_deaths)/c(df$total_cases)
+df=cbind(df,death_rate)
+temp1 <-  aggregate(total_deaths~location,df,FUN = max)
+temp2 <-  aggregate(total_cases~location,df,FUN = max)
+tempdata <- full_join(temp1,temp2, by = "location")
+tempdata$death_rate=tempdata$total_deaths/tempdata$total_cases
+```
+
+###creating the histogram
+
+```{r}
+hist(tempdata$death_rate, breaks=50, main="death rate frequency",col="green")
+
+```
+###Top 3 countries with highest death rate
+
+```{r}
+library("data.table")
+top3deathrate=tempdata
+top3deathrate<- top3deathrate[with(top3deathrate,order(-death_rate)),]
+top3deathrate <- top3deathrate[1:3,]
+top3=data.frame("countries"=c(top3deathrate$location),"death_rate"=c(top3deathrate$death_rate))
+t=setDT(top3)
+t
+```
 
 8. [9 pt] Given that most vaccinations (specifically *Pfizer* and *Moderna*) are given in two-doses, we want to investigate whether different countries employ different vaccination strategies. While some countries vaccinate only individuals for which there are two doseas of the vaccine given at proximity in time (usually less than one month apart), other countries first use the available vaccines to vaccninate as many poeple as possible using one dose, and may delay the second dose for these individuals. <br>
 Create an additional column called `two_dose_fraction`, defined as the number of *fully vaccinated* people divided by the number of *vaccinated* people. <br>
 Next, plot for `Israel`, `United Kingdom` and `United States` this value as a function of date, on the same plot with different colors. 
 What do you think are the vaccination strategies for the different countries based on these plots? explain. 
 
+```{r}
+df <-mutate(df, two_dose_fraction = people_fully_vaccinated / people_vaccinated)
+```
+
+```{r}
+sub_data <- df %>% select(location, date, two_dose_fraction) %>% na.omit() %>% subset( location == "Israel" |location =='United Kingdom'|location =='United States')
+```
+
+```{r}
+ggplot(sub_data,aes_string(y='two_dose_fraction',col="location"))+ geom_line(aes(x=as.Date(date)), size=1)+ylab('two dose fraction')+xlab("months")+theme_bw()
+```
 
 9. [14 pt] We want to use the data in order to study the time delay between the diagnosis of Covid-19 and the death from Covid-19 for cases not surviving the disease. For two functions of time $X(t)$ and $Y(t)$ (here $t$ is discrete, representing for example days) we define the *cross-correlation* as follows: $cross_{corr}(\Delta_t ; X, Y) = Corr(X(t), Y(t+\Delta_t))$. <br>
 That is, the cross-correlation function at the time-delay $\Delta_t$ for two vectors of length $n$ is obtained by computing the Pearson correlation coefficient of the vector $X[1,...,n-\Delta_t]$ with the vector $Y[\Delta_t+1,...,n]$, for $\Delta_t>0$. For $\Delta_t < 0$ we replace the role of $X$ and $Y$ in the formula. 
@@ -160,8 +299,21 @@ That is, the cross-correlation function at the time-delay $\Delta_t$ for two vec
 a. Write a function that recieves as input the data-frame, a country name and the name of two columns, and computes the value of their cross-correlation in this country for time delay of up to two months apart, that is for all values of $\Delta_t$ between $-60$ days and $60$ days. 
 The function should return a vector of length $121$ representing these correlations. 
 
+```{r}
+cross_correlation <- function(data_frame,country_name, column1, column2){
+  dataframe <- df[c("location",column1, column2)]
+  sub <- subset(dataframe, location == country_name) %>% drop_na()
+  cofvalues <- ccf(x=sub[column1],y=sub[column2],lag.max = 60 )
+  return(cofvalues)
+}
+```
+
 b. Compute the cross correlation between the number of  `new_cases` and `new_deaths` for *Canada*, and plot it as a function of $\Delta_t$. 
 At what time delay is the cross correlation maximized? what is your interpretation of this time-delay? 
+
+```{r}
+cross_correlation(df,"Canada","new_deaths","new_cases")
+```
 
 10. [12 pt] Finally, we want to examine if the data shows evidence for the effectiveness of the vaccines in reducing the number of Covid-19 cases. 
 Compute the *ratio* between the *current* number of smoothed new cases (at April 23rd, 2021), and the *maximal* number of smoothed new cases for each country. <br>
@@ -169,7 +321,27 @@ Extract also the total number of vaccinations per hundred people for each countr
 Make a scatter-plot of the two with the ratio shown in *log*, i.e. comparing the vaccination rate to the *log* of the reduction in the number of current daily cases compared to its maximum. <br>
 Mark in red in the scatter-plot the points corresponding to Israel and to United Kingdom. How effective are vaccinations for these two countries
 based on the plot? do you see other countries where the effect of vaccination seems very different? 
+```{r}
+maximal.cases <-  aggregate(new_cases_smoothed~location,df,FUN = max)
+current.cases <- df %>% filter(date == '2021-04-23') %>% select(location,new_cases_smoothed)
+vaccinations.cases <- df %>% filter(date == '2021-04-1') %>% select(location,total_vaccinations_per_hundred)
+colnames(maximal.cases)[colnames(maximal.cases) == 'new_cases_smoothed'] <- 'maximal_cases_smoothed'
+colnames(current.cases)[colnames(current.cases) == 'new_cases_smoothed'] <- 'current_cases_smoothed'
+sub.data <- full_join(current.cases,maximal.cases,by = "location")
+sub.data <- mutate(sub.data, ratio_between_current_maximal = current_cases_smoothed/maximal_cases_smoothed)
+sub.data <- full_join(sub.data,vaccinations.cases,by = "location")
+```
 
+```{r}
+outliers <- sub.data %>%  subset( location == "Israel" |location =='United Kingdom')
+```
+
+```{r}
+with(sub.data, plot(log(total_vaccinations_per_hundred), log(ratio_between_current_maximal), main='comparing the vaccination rate and the ratio rate', cex=.9, col='#0078FF', xlab='log total vaccinations per hundred', ylab='log ratio between current dna maximal rate'))
+par(new=TRUE)
+with(outliers, points(log(total_vaccinations_per_hundred), log(ratio_between_current_maximal), cex=.9, col='red'))
+with(outliers, text(log(ratio_between_current_maximal)~log(total_vaccinations_per_hundred), labels=location, cex=0.7, pos=2, col='red'))
+```
 
   
 **Solution:**  
