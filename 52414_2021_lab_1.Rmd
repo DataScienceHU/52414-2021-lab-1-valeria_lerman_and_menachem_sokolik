@@ -331,13 +331,33 @@ That is, the cross-correlation function at the time-delay $\Delta_t$ for two vec
 a. Write a function that recieves as input the data-frame, a country name and the name of two columns, and computes the value of their cross-correlation in this country for time delay of up to two months apart, that is for all values of $\Delta_t$ between $-60$ days and $60$ days. 
 The function should return a vector of length $121$ representing these correlations. 
 
-Write the function as required based on ccf function.
+Write the function as required based on 
+First creates a time line as an applicant which delimits the delta as required. Retrieves the input column vectors, as well as the time in 1st place and in n place, as the face mentioned in the instructions.
+Correlates by delta affiliation depending on whether it is greater than zero or less than zero, exactly as instructed in the instructions to this question.
 ```{r}
-cross_correlation <- function(data_frame,country_name, column1, column2){
-  dataframe <- df[c("location",column1, column2)]
-  sub <- subset(dataframe, location == country_name) %>% drop_na()
-  cofvalues <- ccf(x=sub[column1],y=sub[column2],lag.max = 60)
-  return(cofvalues)}
+cross_correlation <- function(data_frame,country,column1,column2){
+  required.location <- filter(data_frame,location == country)
+  X <- required.location[[column1]]
+  Y <- required.location[[column2]]
+  min_date <- min(required.location$date)
+  max_date <- max(required.location$date)
+  negative <- seq(60,0,-1)
+  Positive <- seq(1:60)
+  required.location[is.na(required.location)] <- 0
+  cross_correlation=c()
+  for (i in negative){
+    delta_t_y <- seq(min_date,max_date-i,by="days")
+    delta_t_x <- seq(min_date+i,max_date,by="days")
+    y_t <- required.location %>% filter(date %in% delta_t_y) %>% select(column2)
+    x_t <- required.location %>% filter(date %in% delta_t_x) %>% select(column1)
+    cross_correlation=c(cross_correlation, cor(y_t, x_t))}
+  for (i in Positive){
+    delta_t_x <- seq(min_date, max_date-i, by="days")
+    delta_t_y <- seq(min_date+i, max_date, by="days")
+    x_t <- required.location %>% filter(date %in% delta_t_x) %>% select(column1)
+    y_t <- required.location %>% filter(date %in% delta_t_y) %>% select(column2)
+    cross_correlation = c(cross_correlation, cor(x_t,y_t))}
+  return(cross_correlation)}
 ```
 
 b. Compute the cross correlation between the number of  `new_cases` and `new_deaths` for *Canada*, and plot it as a function of $\Delta_t$. 
@@ -345,7 +365,11 @@ At what time delay is the cross correlation maximized? what is your interpretati
 
 running the function.
 ```{r}
-cross_correlation(df,"Canada","new_deaths","new_cases")
+candada.cross.correlation <- cross_correlation(df,"Canada","new_cases","new_deaths")
+time_delay <- seq(-60,60,1)
+p <- plot(time_delay, candada.cross.correlation, main= 'cross correlation between the new cases and new deaths for Canada', cex=.9, col='#0078FF', xlab='time delay', ylab='cross correlation of candada.')
+par(new=TRUE)
+time_delay[which.max(candada.cross.correlation)]
 ```
 
 10. [12 pt] Finally, we want to examine if the data shows evidence for the effectiveness of the vaccines in reducing the number of Covid-19 cases. 
