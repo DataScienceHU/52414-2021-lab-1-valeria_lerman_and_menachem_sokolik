@@ -74,6 +74,35 @@ class(df$date)
 
 2. [6 pt] List in a table the top 5 countries in terms of current `total_cases_per_million`. Show only the country, last-date, and the total number of cases per million. <br>
 
+
+```{r}
+
+top_5 <- function(data,colname){
+# Extract the top value in each group
+# as.data.table(group)
+# group[group[, .I[pt == max(pt)], by=Subject]$V1]
+  last.data <- df %>% select(location,total_cases_per_million,date) %>% group_by(location)
+  last.data <-last.data %>% top_n(1,total_cases_per_million)
+# Order data descending
+order.data <- last.data[order(last.data[colname], decreasing = TRUE), ] 
+print(head(order.data,5))
+}
+top_5(df,"total_cases_per_million")
+top_5(df,"total_deaths_per_million")
+top_5(df,"total_vaccinations_per_hundred")
+df[df[, .I[which.max(df$total_cases_per_million)], by=location]$V1]
+
+
+ID    <- c(1,1,1,2,2,2,2,3,3)
+Value <- c(2,3,5,2,5,8,17,3,5)
+Event <- c(1,1,2,1,2,1,2,2,2)
+
+group <- data.frame(Subject=ID, pt=Value, Event=Event)
+group[group[, .I[which.max(pt)], (by=group$Subject)]$V1]
+
+```
+
+
 ```{r}
 top_5 <- function(x){
   cases.agg <- aggregate(df[,as.numeric(x)]~location ,df, FUN = max)

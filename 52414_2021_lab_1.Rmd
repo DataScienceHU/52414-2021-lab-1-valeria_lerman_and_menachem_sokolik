@@ -180,13 +180,13 @@ myfun(datab,"log_new_tests_smoothed")
 a. Create a new data-frame with one row per country, that for each countrie will store as columns the current `total_cases_per_million` and `total_deaths_per_million`, in addition to the country name (`location`). <br>
 Next, make a scatter plot showing these two columns. Compute a linear regression line of the number of deaths per million as a function of the number of cases per million and add the fitted regression line to the plot. What is the slope and what does it represent? 
 
-###The data frame
+The data frame
 ```{r}
 dat1 <-  aggregate(total_deaths_per_million~location,df,FUN = max)
 dat2 <-  aggregate(total_cases_per_million~location,df,FUN = max)
 data <- full_join(dat1,dat2,by = "location")
 ```
-###The scatter plot
+The scatter plot
 ```{r}
 cleandat=na.omit(data)
 options(scipen = 100)
@@ -209,7 +209,6 @@ joindata <- full_join(col1,col2,by = "location")
 new=data.frame(df$location,df$new_cases,df$date)
 colnames(new)=c("location","new_cases","max_new_cases_date")
 joindata <- merge(joindata,new,by=c("location","new_cases"))
-
 new1=data.frame(df$location,df$new_deaths,df$date)
 new1=na.exclude(new1)
 colnames(new1)=c("location","new_deaths","max_new_deaths_date")
@@ -219,9 +218,8 @@ data=full_join(data,joindata1)
 data=na.omit(data)
 summary(lm(new_deaths~new_cases,data=data))
 
-
 options(scipen = 100)
-ggplot(data = data, mapping = aes(x = new_cases, y = new_deaths))+geom_point()+geom_smooth(method="lm")
+ggplot(data = data, mapping = aes(x = max_new_cases_date, y = max_new_deaths_date))+geom_point()+geom_smooth(method="lm")
 ```
 
 
@@ -229,7 +227,7 @@ ggplot(data = data, mapping = aes(x = new_cases, y = new_deaths))+geom_point()+g
 Show the three columns in three different barplots. <br>
 *Guidance:* (i) Beware to not double-count cases/deaths/vaccinations. (ii) Treat each month seperately (e.g. March 2020 and March 2021 are different).
 
-###The monthly dataframe
+The monthly dataframe
 ```{r}
 temp=data.frame(c(df$location),c(df$date),c(df$new_cases),c(df$new_deaths),c(df$new_vaccinations))
 temp[is.na(temp)] <- 0
@@ -244,8 +242,7 @@ monthly=data.frame(c(aggr.stat1),c(aggr.stat2[,2]),c(aggr.stat3[,2]))
 colnames(monthly)=c("months","new_cases","new_deaths","new_vaccinations")
 ```
 
-###The barplots
-
+The barplots
 ```{r}
 # Fitting Labels
 par(las=2) # make label text perpendicular to axis
@@ -281,23 +278,17 @@ text(x=monthly.cases.plot,y=c(monthly$new_vaccinations),label=c(monthly$new_vacc
 Next, make a histogram of the current death rates over all countries with 50 bins. <br>
 List in a table the top 3 countries having the highest death rate. 
 
-###creating the death rate
+creating the death rate
 ```{r}
-death_rate=c(df$total_deaths)/c(df$total_cases)
-df=cbind(df,death_rate)
-temp1 <-  aggregate(total_deaths~location,df,FUN = max)
-temp2 <-  aggregate(total_cases~location,df,FUN = max)
-tempdata <- full_join(temp1,temp2, by = "location")
-tempdata$death_rate=tempdata$total_deaths/tempdata$total_cases
+df <- mutate(df, death_rate = total_deaths / total_cases)
+data <-df %>% drop_na(death_rate) %>% select(location, death_rate, date) %>% group_by(location) %>% top_n(1, date)
 ```
 
-###creating the histogram
-
+creating the histogram
 ```{r}
-hist(tempdata$death_rate, breaks=50, main="death rate frequency",xlab = "death rate",col='#65BDED', border="white", font.axis=2)
+hist(data$death_rate, breaks=50, main="death rate frequency",xlab = "death rate",col='#65BDED', border="white", font.axis=2)
 ```
-###Top 3 countries with highest death rate
-
+Top 3 countries with highest death rate
 ```{r}
 top3deathrate <- tempdata
 top3deathrate <- top3deathrate[with(top3deathrate,order(-death_rate)),]
@@ -343,20 +334,19 @@ cross_correlation <- function(data_frame,country,column1,column2){
   max_date <- max(required.location$date)
   negative <- seq(60,0,-1)
   Positive <- seq(1:60)
-  required.location[is.na(required.location)] <- 0
   cross_correlation=c()
   for (i in negative){
     delta_t_y <- seq(min_date,max_date-i,by="days")
     delta_t_x <- seq(min_date+i,max_date,by="days")
     y_t <- required.location %>% filter(date %in% delta_t_y) %>% select(column2)
     x_t <- required.location %>% filter(date %in% delta_t_x) %>% select(column1)
-    cross_correlation=c(cross_correlation, cor(y_t, x_t))}
+    cross_correlation=c(cross_correlation, cor(y_t, x_t, use = "complete.obs"))}
   for (i in Positive){
     delta_t_x <- seq(min_date, max_date-i, by="days")
     delta_t_y <- seq(min_date+i, max_date, by="days")
     x_t <- required.location %>% filter(date %in% delta_t_x) %>% select(column1)
     y_t <- required.location %>% filter(date %in% delta_t_y) %>% select(column2)
-    cross_correlation = c(cross_correlation, cor(x_t,y_t))}
+    cross_correlation = c(cross_correlation, cor(x_t,y_t, use = "complete.obs"))}
   return(cross_correlation)}
 ```
 
