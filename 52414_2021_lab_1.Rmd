@@ -350,6 +350,7 @@ Create an additional column called `two_dose_fraction`, defined as the number of
 Next, plot for `Israel`, `United Kingdom` and `United States` this value as a function of date, on the same plot with different colors. 
 What do you think are the vaccination strategies for the different countries based on these plots? explain. 
 
+explanation: It can be seen that Israel used the two-dose vaccine method, as did the United States, only that in Israel there was pressure and strong publicity for vaccines. In the UK they started with two doses and then switched to one dose for a while and thought it was more effective after a while they switched again to two doses of vaccine (probably was not so effective). And what explains the sharp rise is that there are an amount of people who have been vaccinated once, now only the second vaccine remains.
 Create a new column as required by a function mutate.
 ```{r}
 df <-mutate(df, two_dose_fraction = people_fully_vaccinated / people_vaccinated)
@@ -401,7 +402,7 @@ b. Compute the cross correlation between the number of  `new_cases` and `new_dea
 At what time delay is the cross correlation maximized? what is your interpretation of this time-delay? 
 
 explanation: We can see according to the graph that the peak appears around the 17 day.
-The meaning of this fact, is that if someone gets infected by the virus on a specific date, then he would likely die approximately 17 days afterwards.
+The meaning of this fact, is that if someone gets infected by the virus on a specific date, then he would likely die approximately 17 days afterwards in canada.
 In other words, the peak in the graph represents the approximated number of days between the infection day and the death day for the same person.
 
 running the function.
@@ -420,6 +421,11 @@ Make a scatter-plot of the two with the ratio shown in *log*, i.e. comparing the
 Mark in red in the scatter-plot the points corresponding to Israel and to United Kingdom. How effective are vaccinations for these two countries
 based on the plot? do you see other countries where the effect of vaccination seems very different? 
 
+explanation: We see that the countries of Israel and the United Kingdom that used the two-dose vaccine as can be seen in question 8,
+then the rate of decrease in the ratio is significant.
+There are countries whose vaccination rate is low and at the same time the rate is also low, 
+this can be explained by other reduction methods such as curfews (but which have really moved and not like in Israel).
+There are countries where the vaccination rate is large but the decrease is relatively low. This can be attributed to the use of one dose or of vaccines by other companies, in which the percentage of vaccination is lower than in companies used in Israel and England.
 ```{r}
 maximal.cases <-  aggregate(new_cases_smoothed~location,df,FUN = max) # In order for me to get the maximum as required.
 current.cases <- df %>% filter(date == '2021-04-23') %>% select(location,new_cases_smoothed) # In order for me to get the data according to the mine date.
@@ -437,10 +443,10 @@ outliers <- sub.data %>%  subset( location == "Israel" |location =='United Kingd
 ```
 Create a scatter plot for those countries with outlines Israel and United Kingdom
 ```{r}
-with(sub.data, plot(y=log(total_vaccinations_per_hundred), x=log(ratio_between_current_maximal), main='comparing the vaccination rate and the ratio rate', cex=.9, col='#0078FF', ylab='log total vaccinations per hundred', xlab='log ratio between current dna maximal rate'))
+with(sub.data, plot(y=total_vaccinations_per_hundred, x=log(ratio_between_current_maximal), main='comparing the vaccination rate and the ratio rate', cex=.9, col='#0078FF', ylab='total vaccinations per hundred', xlab='log ratio between current dna maximal rate'))
 par(new=TRUE)
-with(outliers, points(log(ratio_between_current_maximal), log(total_vaccinations_per_hundred), cex=.9, col='red'))
-with(outliers, text(log(total_vaccinations_per_hundred)~log(ratio_between_current_maximal), labels=location, cex=0.7, pos=2, col='red'))
+with(outliers, points(log(ratio_between_current_maximal), total_vaccinations_per_hundred, cex=.9, col='red'))
+with(outliers, text(total_vaccinations_per_hundred~log(ratio_between_current_maximal), labels=location, cex=0.7, pos=2, col='red'))
 ```
 
   
