@@ -394,6 +394,8 @@ Create a scatter plot for those countries.
 ```{r}
 ggplot(sub_data,aes_string(y='two_dose_fraction', col="location"),main="Rate of two vaccine doses by date")+ geom_line(aes(x=as.Date(date)), size=1)+ylab('two dose fraction')+xlab(NULL)+theme_bw()
 ```
+
+
 It can be seen that Israel used the two-dose vaccine method, as did the United States, only that in Israel there was pressure and strong publicity for vaccines. In the UK they started with two doses and then switched to one dose for a while and thought it was more effective after a while they switched again to two doses of vaccine (probably was not so effective). And what explains the sharp rise is that there are an amount of people who have been vaccinated once, now only the second vaccine remains.
 
 9.studying the time delay between the diagnosis of Covid-19 and the death from Covid-19 for cases not surviving the disease.
@@ -434,8 +436,8 @@ p <- plot(time_delay, candada.cross.correlation, main= 'cross correlation betwee
 par(new=TRUE)
 time_delay[which.max(candada.cross.correlation)]
 ```
-We can see according to the graph that the peak appears around the 17 day.
-The meaning of this fact, is that if someone gets infected by the virus on a specific date, then he would likely die approximately 17 days afterwards in canada.
+We can see according to the graph that the peak appears around the `r time_delay[which.max(candada.cross.correlation)]` day.
+The meaning of this fact, is that if someone gets infected by the virus on a specific date, then he would likely die approximately `r time_delay[which.max(candada.cross.correlation)]` days afterwards in canada.
 In other words, the peak in the graph represents the approximated number of days between the infection day and the death day for the same person.
 
 
