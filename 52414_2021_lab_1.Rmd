@@ -152,10 +152,16 @@ based on the plot? do you see other countries where the effect of vaccination se
 
 1. loading the complete covid19 dataset in csv format from the world-of-data and changing the class to date
 ```{r}
-df <- read.csv("owid-covid-data.csv")
+df <- read.csv(url("https://covid.ourworldindata.org/data/owid-covid-data.csv"))
 df$date = as.Date(df$date) # change Date from factor to date type
 class(df$date)
 ```  
+cleaning the data from rows with “world” and “international” values
+```{r}
+df = filter(df, location!="World" & location!= "International" & location!= "European Union")
+```
+
+
 
 2. Create a function that will use me on finding a maximum for three different columns.
 
@@ -203,7 +209,7 @@ we filtered the data by rows, and created a smaller dataset with data for every 
 We used the ggplot basic function, in order to create a scatter plot of the input column by dates, and used a different color for each line to tell apart every continent.
 ```{r}
 myfun = function(dat_frame,name){
-  data_frame2<-dat_frame %>% drop_na(all_of(name)) %>% filter((continent=="") & location != "World" & location != "International" & location != "European Union")
+  data_frame2<-dat_frame %>% drop_na(all_of(name)) %>% filter(continent=="")
   ggplot(data_frame2,aes_string(y=name,col="location"))+ geom_line(aes(x=as.Date(date)))+ylab(gsub("_"," ",name))+xlab("date")+theme_bw()}
 ```
 
@@ -277,8 +283,8 @@ reg=lm(cleandat$total_deaths_per_million~cleandat$total_cases_per_million)
 summary(reg)
 ```
 From The plot we can conclude that there is a positive correlation between the total cases per million and the total deaths per million for an arbitrary country.
-The slope is equal to 0.016, which means that for every case of the virus, there will be 0.016 death. In other words, for every 1000 cases, there will be approximately 16 death cases.
-Note that the intercept we got from the regression summary is around 62, which doesn't seem possible, as it represents the number of total deaths per million for zero total cases per million.
+The slope is equal to `r coef(reg)[2]`, which means that for every case of the virus, there will be `r coef(reg)[2]` death. In other words, for every 1000 cases, there will be approximately `r coef(reg)[2]*1000` death cases.
+Note that the intercept we got from the regression summary is around `r coef(reg)[1]`, which doesn't seem possible, as it represents the number of total deaths per million for zero total cases per million.
 
 5b. Finding for each country the date at which the number of new `cases` was maximal, and the date at which the number of new `deaths` was maximal, and creating a scatter plot.
 ```{r}
@@ -293,7 +299,7 @@ sub.data.7=select(sub.data.7, c(location,total_deaths_per_million,total_cases_pe
 ```
 a linear regression
 ```{r}
-reg <- lm(new_deaths~new_cases,data=sub.data.7)
+reg <- lm(as.matrix(date_of_max_deaths)~as.matrix(date_of_max_cases),data=sub.data.7)
 summary(reg)
 ```
 a scatter plot with a linear regression line
@@ -302,16 +308,9 @@ options(scipen = 100)
 ggplot(data = sub.data.7, mapping = aes(x = date_of_max_cases, y = date_of_max_deaths))+geom_point()+geom_smooth(method="lm", se=F)
 ```
 
-```{r}
-sub.data.7$log_new_cases=log(sub.data.7$new_cases)
-sub.data.7$log_new_deaths=log(sub.data.7$new_deaths)
-ggplot(data = sub.data.7, mapping = aes(x = log_new_cases, y = log_new_deaths))+geom_point()+geom_smooth(method="lm", se=F)
-```
-
-
-The slop of the graph represents the relation between the dates of max new deaths and the dates of max new cases. If more dates of max new deaths are equal to the dates of max new cases for each country respectively, then the slope will be closer to 1, and according to the regression summary it is equal to 0.58677.
-According to the scatter plot it doesn't seem like the slope is close to 1, in addition the variance of our observations is quite big,however it still looks like there is a positive linear connection between the dates..
-The x-axis represents the dates of max new cases for each country, so in our opinion the intercept represents the date of max new deaths for the first country in our data frame.The intercept in our regression is equal to 7675.83809 , which is not very informative because the y axis represents dates, and not numbers, whereas the regression interprets the given dates as numeric. 
+The slop of the graph represents the relation between the dates of max new deaths and the dates of max new cases. If more dates of max new deaths are equal to the dates of max new cases for each country respectively, then the slope will be closer to 1, and according to the regression summary it is equal to `r coef(reg)[2]`
+According to the scatter plot it doesn't seem like the slope is close to 1, in addition the variance of our observations is quite big,however it still looks like there is a positive linear connection between the dates.
+The x-axis represents the dates of max new cases for each country, so in our opinion the intercept represents the date of max new deaths for the first country in our data frame.The intercept in our regression is equal to  `r coef(reg)[1]` , which is not very informative because the y axis represents dates, and not numbers, whereas the regression interprets the given dates as numeric. 
 
 6. computing the world-wide number of `new_cases`, `new_deaths` and `new_vaccinations` by month. 
 note that we have to aggregate all of the three columns using sum function, bacause those values are total values.
@@ -463,6 +462,7 @@ par(new=TRUE)
 with(outliers, points(log(ratio_between_current_maximal), total_vaccinations_per_hundred, cex=.9, col='red'))
 with(outliers, text(total_vaccinations_per_hundred~log(ratio_between_current_maximal), labels=location, cex=0.7, pos=2, col='red'))
 ```
+We expect there to be a high correlation between the ratio and the amount of strains. The greater the amount of vaccines, the lower the ratio.
 We see that the countries of Israel and the United Kingdom that used the two-dose vaccine as can be seen in question 8,
 then the rate of decrease in the ratio is significant.
 There are countries whose vaccination rate is low and at the same time the rate is also low, 
