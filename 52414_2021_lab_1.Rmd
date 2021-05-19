@@ -305,7 +305,7 @@ summary(reg)
 a scatter plot with a linear regression line
 ```{r}
 options(scipen = 100)
-ggplot(data = sub.data.7, mapping = aes(x = date_of_max_cases, y = date_of_max_deaths))+geom_point()+geom_smooth(method="lm", se=F)
+ggplot(data = sub.data.7, mapping = aes(x = date_of_max_cases, y = date_of_max_deaths))+geom_point()+geom_smooth(method="lm", se=F)+ylab(gsub("_"," ","date_of_max_deaths"))+xlab(gsub("_"," ","date_of_max_cases"))
 ```
 
 The slop of the graph represents the relation between the dates of max new deaths and the dates of max new cases. If more dates of max new deaths are equal to the dates of max new cases for each country respectively, then the slope will be closer to 1, and according to the regression summary it is equal to `r coef(reg)[2]`
