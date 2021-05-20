@@ -283,8 +283,8 @@ reg=lm(cleandat$total_deaths_per_million~cleandat$total_cases_per_million)
 summary(reg)
 ```
 From The plot we can conclude that there is a positive correlation between the total cases per million and the total deaths per million for an arbitrary country.
-The slope is equal to `r coef(reg)[2]`, which means that for every case of the virus, there will be `r coef(reg)[2]` death. In other words, for every 1000 cases, there will be approximately `r coef(reg)[2]*1000` death cases.
-Note that the intercept we got from the regression summary is around `r coef(reg)[1]`, which doesn't seem possible, as it represents the number of total deaths per million for zero total cases per million.
+The slope is equal to `r round(coef(reg)[2],3)`, which means that for every case of the virus, there will be `r round(coef(reg)[2],3)` death. In other words, for every 1000 cases, there will be approximately `r round(coef(reg)[2]*1000,3)` death cases.
+Note that the intercept we got from the regression summary is around `r round(coef(reg)[1],3)`, which doesn't seem possible, as it represents the number of total deaths per million for zero total cases per million.
 
 5b. Finding for each country the date at which the number of new `cases` was maximal, and the date at which the number of new `deaths` was maximal, and creating a scatter plot.
 ```{r}
@@ -308,9 +308,9 @@ options(scipen = 100)
 ggplot(data = sub.data.7, mapping = aes(x = date_of_max_cases, y = date_of_max_deaths))+geom_point()+geom_smooth(method="lm", se=F)+ylab(gsub("_"," ","date_of_max_deaths"))+xlab(gsub("_"," ","date_of_max_cases"))
 ```
 
-The slop of the graph represents the relation between the dates of max new deaths and the dates of max new cases. If more dates of max new deaths are equal to the dates of max new cases for each country respectively, then the slope will be closer to 1, and according to the regression summary it is equal to `r coef(reg)[2]`
+The slop of the graph represents the relation between the dates of max new deaths and the dates of max new cases. If more dates of max new deaths are equal to the dates of max new cases for each country respectively, then the slope will be closer to 1, and according to the regression summary it is equal to `r round(coef(reg)[2],3)`
 According to the scatter plot it doesn't seem like the slope is close to 1, in addition the variance of our observations is quite big,however it still looks like there is a positive linear connection between the dates.
-The x-axis represents the dates of max new cases for each country, so in our opinion the intercept represents the date of max new deaths for the first country in our data frame.The intercept in our regression is equal to  `r coef(reg)[1]` , which is not very informative because the y axis represents dates, and not numbers, whereas the regression interprets the given dates as numeric. 
+The x-axis represents the dates of max new cases for each country, so in our opinion the intercept represents the date of max new deaths for the first country in our data frame.The intercept in our regression is equal to  `r round(coef(reg)[1], 3)` , which is not very informative because the y axis represents dates, and not numbers, whereas the regression interprets the given dates as numeric. 
 
 6. computing the world-wide number of `new_cases`, `new_deaths` and `new_vaccinations` by month. 
 note that we have to aggregate all of the three columns using sum function, bacause those values are total values.
@@ -376,8 +376,9 @@ hist(data$death_rate, breaks=50, main="death rate frequency",xlab = "death rate"
 ```
 Top 3 countries with highest death rate
 ```{r}
-data <- data.frame(data)
-top_n(data,3,wt=death_rate) %>% select(location,death_rate)
+top_3 <- head(data[order(data[2],decreasing = TRUE),],3) # Ordering by Value
+rownames(top_3) <-NULL
+top_3[1:2]
 ```
 
 8.investigating whether different countries employ different vaccination strategies
