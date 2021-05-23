@@ -13,7 +13,6 @@ output: html_document
   
   
 ### Submission Instructions  
-  
 This lab will be submitted in pairs using GitHub (if you don't have a pair, please contact us).  
 Please follow the steps in the  Git Classroom assignment to create your group's Lab 1 repository.  
 **Important: your team's name must be `FamilyName1_Name1_and_FamilyName2_Name2`**.  
