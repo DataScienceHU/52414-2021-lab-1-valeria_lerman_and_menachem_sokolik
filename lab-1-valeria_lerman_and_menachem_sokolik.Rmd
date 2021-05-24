@@ -309,6 +309,7 @@ ggplot(data = sub.data.7, mapping = aes(x = date_of_max_cases, y = date_of_max_d
 
 The slop of the graph represents the relation between the dates of max new deaths and the dates of max new cases. If more dates of max new deaths are equal to the dates of max new cases for each country respectively, then the slope will be closer to 1, and according to the regression summary it is equal to `r round(coef(reg)[2],3)`
 According to the scatter plot it doesn't seem like the slope is close to 1, in addition the variance of our observations is quite big,however it still looks like there is a positive linear connection between the dates.
+its really make sense that after a few weeks from the date with maximum new cases, it will be the date with the maximum dates (As we will see in question 9).
 The x-axis represents the dates of max new cases for each country, so in our opinion the intercept represents the date of max new deaths for the first country in our data frame.The intercept in our regression is equal to  `r round(coef(reg)[1], 3)` , which is not very informative because the y axis represents dates, and not numbers, whereas the regression interprets the given dates as numeric. 
 
 6. computing the world-wide number of `new_cases`, `new_deaths` and `new_vaccinations` by month. 
@@ -373,6 +374,8 @@ creating the histogram
 ```{r}
 hist(data$death_rate, breaks=50, main="death rate frequency",xlab = "death rate",col='#65BDED', border="white", font.axis=2)
 ```
+
+we can see that almost all of the death rates are under 5%.
 Top 3 countries with highest death rate
 ```{r}
 top_3 <- head(data[order(data[2],decreasing = TRUE),],3) # Ordering by Value
@@ -459,10 +462,10 @@ outliers <- sub.data %>%  subset( location == "Israel" |location =='United Kingd
 ```
 Create a scatter plot for those countries with outlines Israel and United Kingdom
 ```{r}
-with(sub.data, plot(y=total_vaccinations_per_hundred, x=log(ratio_between_current_maximal), main='comparing the vaccination rate and the ratio rate', cex=.9, col='#0078FF', ylab='total vaccinations per hundred', xlab='log ratio between current dna maximal rate'))
+with(sub.data, plot(x=total_vaccinations_per_hundred, y=log(ratio_between_current_maximal), main='comparing the vaccination rate and the ratio rate', cex=.9, col='#0078FF', xlab='total vaccinations per hundred', ylab='log ratio between current dna maximal rate'))
 par(new=TRUE)
-with(outliers, points(log(ratio_between_current_maximal), total_vaccinations_per_hundred, cex=.9, col='red'))
-with(outliers, text(total_vaccinations_per_hundred~log(ratio_between_current_maximal), labels=location, cex=0.7, pos=2, col='red'))
+with(outliers, points(total_vaccinations_per_hundred, log(ratio_between_current_maximal), cex=.9, col='red'))
+with(outliers, text(log(ratio_between_current_maximal)~total_vaccinations_per_hundred, labels=location, cex=0.7, pos=2, col='red'))
 ```
 We expect there to be a high correlation between the ratio and the amount of strains. The greater the amount of vaccines, the lower the ratio.
 We see that the countries of Israel and the United Kingdom that used the two-dose vaccine as can be seen in question 8,
