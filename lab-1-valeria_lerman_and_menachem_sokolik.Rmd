@@ -377,6 +377,7 @@ hist(data$death_rate, breaks=50, main="death rate frequency",xlab = "death rate"
 ```
 
 we can see that almost all of the death rates are under 5%.
+
 Top 3 countries with highest death rate
 ```{r}
 top_3 <- head(data[order(data[2],decreasing = TRUE),],3) # Ordering by Value
@@ -468,6 +469,9 @@ par(new=TRUE)
 with(outliers, points(total_vaccinations_per_hundred, log(ratio_between_current_maximal), cex=.9, col='red'))
 with(outliers, text(log(ratio_between_current_maximal)~total_vaccinations_per_hundred, labels=location, cex=0.7, pos=2, col='red'))
 ```
+
+
+
 We expect there to be a high correlation between the ratio and the amount of strains. The greater the amount of vaccines, the lower the ratio.
 We see that the countries of Israel and the United Kingdom that used the two-dose vaccine as can be seen in question 8,
 then the rate of decrease in the ratio is significant.
