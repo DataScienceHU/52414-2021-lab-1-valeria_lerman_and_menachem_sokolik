@@ -255,6 +255,7 @@ return(contidata)}
 4b.Applying the function from a. to fill the `new_tests_smoothed` column for the continents, and plotting the *log* of the *smoothed* number per continent vs. date using the function from qu. 3. 
 ```{r}
 datab =myfun2(df,"new_tests_smoothed")
+
 datab=filter(datab,new_tests_smoothed>0)
 datab$log_new_tests_smoothed=log(datab$new_tests_smoothed)
 datab$location=datab$continent
